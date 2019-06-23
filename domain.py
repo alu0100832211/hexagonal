@@ -31,6 +31,7 @@ class Badge(Entity):
     name: str = None
     description: str = None
     criteria: List[str] = None
+    image: str = None
 
 @dataclass
 class Badges(Entity):

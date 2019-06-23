@@ -27,6 +27,7 @@ class Application:
         return str(self.config.BADGE + badge_id + '.json')
 
     def create_badge(self, **params):
+        badge_params = ["name", "description", "criteria", "image"]
         new_badge = Badge(params)
         for badge in self.badges:
             if badge.name == new_badge.name:
