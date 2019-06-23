@@ -26,16 +26,19 @@ class Application:
             badge_id = badge.badge_id
         return str(self.config.BADGE + badge_id + '.json')
 
-    def create_badge(self, **params):
-        badge_params = ["name", "description", "criteria", "image"]
-        new_badge = Badge(params)
+    def create_badge(self, name, description, criteria, image):
+        new_badge = Badge()
+        new_badge.name = name
+        new_badge.description = description
+        new_badge.criteria = criteria
+        new_badge.image = image
+
         for badge in self.badges:
             if badge.name == new_badge.name:
                 return
 
         self.badges.append(new_badge)
-        with open(badge_path(new_badge), 'w') as f:
-            json.dump(new_badge.to_json())
+        #self.persistence.badge(new_badge)
 
     def assign(self, badge: Badge, person: Person):
         now = datetime.now()
