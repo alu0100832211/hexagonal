@@ -1,1 +1,7 @@
 aiohttp
+slackclient>=2.0.0
+certifi
+flask-wtf
+flask
+python-dotenv
+flask-bootstrap

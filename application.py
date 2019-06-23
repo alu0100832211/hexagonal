@@ -3,39 +3,21 @@
 from domain import Issuer, Person, Badge, Award
 from typing import List
 from datetime import datetime
-import json, os
+import json, os, sys
 from config import Config
 
 class Application:
     def __init__(self, config = None):
         self.config = config
-        try:
-            with open(badges_path()) as f:
-                badge_ids = json.load(f)
-                self.badges = list()
-                for badge_id in badge_ids:
-                    with open(badge_path(badge_id=badge_id)) as f:
-                        self.badges.append(Badge(json.load(f)))
-#            with open(self.config.PERSONS, 'r') as f:
-#                self.persons = json.load(f)["persons"]
-#                for person_id in self.persons:
-#                    filename = self.config.person + person_id + '.json'
-#                    self.person = dict()
-#                    with open(filename, 'r') as f:
-#                        self.person[person_id] = json.load(f)
-#            with open(self.config.AWARDS, 'r') as f:
-#                self.awards = json.load(f)["awards"]
-#                for award_id in self.awards:
-#                    filename = self.config.award + award_id + '.json'
-#                    self.award = dict()
-#                    with open(filename, 'r') as f:
-#                        self.award[award_id] = json.load(f)
-#            with open(self.config.issuer, 'r') as f:
-#                self.issuer = json.load(f)["issuer"]
-#
-        except Exception as error:
-            sys.exit(str(error))
 
+    def list_badges(self):
+        """Devuelve diccionario con nombre del badge
+        y su correspondiente png
+        """
+        with open("api/badges.json") as f:
+            return json.load(f)
+
+# Esto va en persistence.py
     def badges_path(self):
         return str(self.config.BADGES)
 
@@ -71,6 +53,6 @@ class Application:
         path = 'badge/' + badge.uid
         os.remove(path)
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     config = Config()
     app = Application(config())
