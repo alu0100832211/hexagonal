@@ -30,7 +30,7 @@ class Api:
         except Exception as error:
             return web.HTTPBadRequest(text=str(error))
 
-    def start(self):
+    async def start(self):
         app = web.Application()
         app.add_routes([web.post('/api/newbadge', self.newbadge)])
         web.run_app(app, port=5000)

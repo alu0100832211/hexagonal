@@ -5,18 +5,18 @@
 """
 from bot import Bot
 from api import Api
-from persinstence import Persistence
+#from persinstence import Persistence
 from application import Application
+import asyncio
 
 
-def main(argv):
+async def main():
     app = Application()
-
-    #bot = Bot(app)
+    bot = Bot(app)
     api = Api(app)
 
-    #bot.start()
-    api.start()
+    await asyncio.gather(bot.start(), api.start())
+
 
 if __name__ == '__main__':
-    main(sys.argv)
+    asyncio.run(main())

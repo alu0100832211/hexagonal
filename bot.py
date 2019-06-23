@@ -1,5 +1,4 @@
 # encoding: utf-8
-# Pregunta: esto qué es?
 import os
 import logging
 import slack
@@ -47,7 +46,7 @@ class Bot:
         else:
             return
 
-    def start(self):
+    async def start(self):
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
         logger.addHandler(logging.StreamHandler())
