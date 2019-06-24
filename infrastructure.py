@@ -10,13 +10,13 @@ from application import Application
 import asyncio
 
 
-async def main():
+async def main(loop):
     app = Application()
     bot = Bot(app)
     api = Api(app)
-
-    await asyncio.gather(bot.start(), api.start())
-
+    await bot.start(loop)
+    await api.start(loop)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(loop))

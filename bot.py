@@ -1,4 +1,5 @@
 # encoding: utf-8
+# Pregunta: esto qué es?
 import os
 import logging
 import slack
@@ -46,16 +47,13 @@ class Bot:
         else:
             return
 
-    async def start(self):
+    def start(self, loop):
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
         logger.addHandler(logging.StreamHandler())
         ssl_context = ssl_lib.create_default_context(cafile=certifi.where())
         slack_token = os.environ["SLACK_BOT_TOKEN"]
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        rtm_client = slack.RTMClient(
-                token=slack_token, ssl=ssl_context, run_async=True, loop=loop)
+        rtm_client = slack.RTMClient(                token=slack_token, ssl=ssl_context, run_async=True, loop=loop)
         loop.run_until_complete(rtm_client.start())
 
 if __name__ == '__main__':

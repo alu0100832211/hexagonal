@@ -4,6 +4,7 @@ y lo imprime
 """
 from aiohttp import web
 from application import Application
+import asyncio
 
 class Api:
     def __init__(self, app: Application):
@@ -30,13 +31,18 @@ class Api:
         except Exception as error:
             return web.HTTPBadRequest(text=str(error))
 
-    async def start(self):
+    def start(self, loop):
         app = web.Application()
         app.add_routes([web.post('/api/newbadge', self.newbadge)])
         web.run_app(app, port=5000)
-
+        runner = web.AppRunner(app)
+        loop.run_until_complete(runner.setup())
+        site = web.TCPSite(runner, '0.0.0.0', 5000)
+        loop.run_until_complete(site.start())
 
 if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
     app = Application()
     api = Api(app)
-    api.start()
+    api.start_async(loop)
+    loop.run_forever()
