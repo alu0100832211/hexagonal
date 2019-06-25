@@ -5,10 +5,14 @@ from typing import List
 from datetime import datetime
 import json, os, sys
 from config import Config
+from persistence import Persistence
 
 class Application:
-    def __init__(self, config = None):
-        self.config = config
+    def __init__(self, p: Persistence):
+        self.badges = p.load_entities(Badge)
+        self.persons = p.load_entities(Person)
+        self.issuers = p.load_entities(Issuer)
+        self.awards = p.load_entities(Award)
 
     def list_badges(self):
         """Devuelve diccionario con nombre del badge
@@ -18,6 +22,12 @@ class Application:
             return json.load(f)
 
 # Esto va en persistence.py
+    def has_badge(self, badge_id):
+        for badge in self.badges:
+            if badge.id == badge_id:
+                return True
+        return False
+
     def badges_path(self):
         return str(self.config.BADGES)
 
@@ -35,9 +45,11 @@ class Application:
 
         for badge in self.badges:
             if badge.name == new_badge.name:
-                return
+                return None
 
         self.badges.append(new_badge)
+        p.store_entites
+        return new_badge
         #self.persistence.badge(new_badge)
 
     def assign(self, badge: Badge, person: Person):
@@ -57,6 +69,12 @@ class Application:
         path = 'badge/' + badge.uid
         os.remove(path)
 
+def entities(entities):
+    if not iter(entity):
+        entities = list(entities)
+    for entity in entities:
+        print(entity)
 if __name__ == '__main__':
-    config = Config()
-    app = Application(config())
+    a = 1
+    entitites(a)
+

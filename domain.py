@@ -10,7 +10,7 @@ def uuid_initializer():
 
 @dataclass
 class Entity:
-    uuid: UUID = field(default_factory = uuid_initializer)
+    e_id: UUID = field(default_factory = uuid_initializer)
     def to_json(self):
         return asdict(self)
 
