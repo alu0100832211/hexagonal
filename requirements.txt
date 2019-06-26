@@ -5,3 +5,4 @@ flask-wtf
 flask
 python-dotenv
 flask-bootstrap
+requests

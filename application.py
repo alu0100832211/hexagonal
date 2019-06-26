@@ -21,7 +21,6 @@ class Application:
         with open("api/badges.json") as f:
             return json.load(f)
 
-# Esto va en persistence.py
     def has_badge(self, badge_id):
         for badge in self.badges:
             if badge.id == badge_id:
@@ -48,9 +47,8 @@ class Application:
                 return None
 
         self.badges.append(new_badge)
-        p.store_entites
+        p.store_entites(self.badges)
         return new_badge
-        #self.persistence.badge(new_badge)
 
     def assign(self, badge: Badge, person: Person):
         now = datetime.now()
@@ -69,12 +67,11 @@ class Application:
         path = 'badge/' + badge.uid
         os.remove(path)
 
-def entities(entities):
-    if not iter(entity):
-        entities = list(entities)
-    for entity in entities:
-        print(entity)
-if __name__ == '__main__':
-    a = 1
-    entitites(a)
 
+if __name__ == '__main__':
+    p = Persistence()
+    a = Application(p)
+    print(a.badges)
+    print(a.persons)
+    print(a.issuers)
+    print(a.awards)

@@ -1,8 +1,5 @@
 {
-  "name": "ULL Badges Slack Bot",
-  "url": "http://vituin-chat.iaas.ull.es",
-  "description": "Descripción",
-  "image": "http://vituin-chat.iaas.ull.es/api/issuer/image",
-  "email": "none",
-  "revocationlist": "none"
+ "name": "ULL Badges Slack Bot",
+ "description": "Descripcion",
+ "url": "http://vituin-chat.iaas.ull.es/api/issuer"
 }

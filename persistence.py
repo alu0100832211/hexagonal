@@ -8,7 +8,7 @@ class Persistence:
         self.path = 'api/'
         pass
 
-    def get_path_list(self, Class: Entity) -> list(path):
+    def get_path_list(self, Class: Entity) -> 'List[str]':
         try:
             class_name = Class.__name__.lower()
             with open(self.path + class_name + 's.json') as f:
@@ -17,7 +17,7 @@ class Persistence:
         except:
             traceback.print_exc(file=sys.stdout)
 
-    def load_path_list_entities(self, Class: Entity, path_list) -> list(Entity):
+    def load_path_list_entities(self, Class: Entity, path_list) -> 'List[Entity]':
         instances = list()
         try:
             class_fields = fields(Class)
@@ -42,6 +42,10 @@ class Persistence:
 
     def store_entities(self, Class: Entity, entity_list) -> None:
         try:
+           "iterable" in entity_list
+        except TypeError:
+            entity_list = [entity_list]
+        try:
             class_name = Class.__name__.lower()
             entity_list_json = dict()
             for entity in entity_list: # Guardar cada entidad
@@ -55,9 +59,6 @@ class Persistence:
                 json.dump(entity_list_json, f)
         except:
             traceback.print_exc(file=sys.stdout)
-
-    def store_entity(self, Class: Entity, entity) -> None:
-        return self.store_entites(Class, list(entity))
 
 if __name__ == '__main__':
     print("Main")

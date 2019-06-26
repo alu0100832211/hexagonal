@@ -11,6 +11,7 @@ def uuid_initializer():
 @dataclass
 class Entity:
     e_id: UUID = field(default_factory = uuid_initializer)
+    name: str = None
     def to_json(self):
         return asdict(self)
 
@@ -28,14 +29,9 @@ class Person(Entity):
 
 @dataclass
 class Badge(Entity):
-    name: str = None
     description: str = None
     criteria: List[str] = None
     image: str = None
-
-@dataclass
-class Badges(Entity):
-    badges: List[Badge] = None
 
 @dataclass
 class Award(Entity):
@@ -43,42 +39,6 @@ class Award(Entity):
     person: Person = None
     badge: Badge = None
 
-
-@dataclass
-class Path:
-    '''
-    Clase con las rutas donde se aplicará la persistencia de las entidades
-    '''
-    PERSONS = 'persons.json'
-    PERSON = 'person/'
-    BADGES = 'badges.json'
-    BADGE = 'badge/'
-    AWARDS = 'awards.json'
-    AWARD = 'award/'
-    ISSUER = 'issuer/issuer.json'
-
-@dataclass
-class Config:
-    '''
-    Clase con los elementos de configuracion
-    '''
-    path: Path
-
-
 #Probando cosas
 if __name__ == '__main__':
-    args = {}
-    args['name'] = 'medalla de oro'
-    args['description'] = 'esto es una medalla de oro'
-    args['criteria'] = list()
-    args['criteria'].append('tener la puntuacion mas alta')
-    args['criteria'].append('ser ganador')
-    args['criteria'].append('saber perder')
-
-    badge = Badge(**args)
-    json = badge.to_json()
-    print(badge)
-    print(json)
-
-    badge2 = Badge(**json)
-    print("badge2", badge2)
+    pass
