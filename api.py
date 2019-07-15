@@ -1,3 +1,4 @@
+# Problema 1: Cuanod se borra algo en api/ no lo refleja el programa
 """
 Servidor aiohttp simple que recibe un post en http://vituin-chat.iaas.ull.es/api/newbadge
 y lo imprime
@@ -5,9 +6,12 @@ y lo imprime
 import sys,traceback
 import os, base64, json, shutil
 from aiohttp import web
+import aiohttp
+import aiofiles
 from application import Application
 from persistence import Persistence
 from award import Award
+from config import Config
 import asyncio
 import uuid
 import logging
@@ -16,11 +20,17 @@ from datetime import datetime
 
 class Api:
     def __init__(self, app: Application):
+        self.config = Config()
+        self.api_path = self.config.api_path
+        self.bakery_path = 'https://backpack.openbadges.org/baker?assertion='
         self.app = app
+        self.awards = dict()
         self.badges = dict()
         try:
             with open('api/badges.json', 'r') as f:
                 self.badges = json.load(f)
+            with open('api/awards.json', 'r') as f:
+                self.awards = json.load(f)
         except FileNotFoundError:
             pass
 
@@ -42,7 +52,10 @@ class Api:
             if self.valid_badgeClass(badge):
                 ##new_badge = self.app.create_badge(**badge)
                 badge_id = str(uuid.uuid4().hex)
-                self.badges[badge_id] = badge['name']
+                self.badges[badge_id] = dict()
+                self.badges[badge_id]['name'] = badge['name']
+                self.badges[badge_id]['url'] = f"{self.api_path}/badge/{badge_id}/json"
+
 
                 ##if new_badge is None:
                 ##    raise ValueError("El badge ya existe")
@@ -52,14 +65,15 @@ class Api:
                 with open(path + 'badge.png', 'wb') as f: #png
                     f.write(base64.b64decode(badge['image']))
 
-                badge['image'] = 'http://vituin-chat.iaas.ull.es/' + path + 'badge.png'
-                badge['issuer'] = 'http://vituin-chat.iaas.ull.es/api/issuer.json'
-                with open(path + 'badge.json', 'w') as f: #class
-                    json.dump(badge, f)
-
                 with open(path + 'badge.html', 'w') as f: #criteria
                     for criteria in badge['criteria']:
                         f.write(criteria + '\n')
+                badge['image'] = f"{self.api_path}/badge/{badge_id}/image"
+                badge['issuer'] = f"{self.api_path}/issuer"
+                badge['criteria'] = f"{self.api_path}/badge/{badge_id}/criteria"
+                with open(path + 'badge.json', 'w') as f: #class
+                    json.dump(badge, f)
+
 
                 with open('api/badges.json', 'w') as f:
                     json.dump(self.badges, f)
@@ -89,42 +103,78 @@ class Api:
                 return web.FileResponse(filepath + 'badge.json')
             if requested_file == "criteria":
                 return web.FileResponse(filepath + 'badge.html')
-        except:
-            traceback.print_exc(file=sys.stdout)
+        except FileNotFoundError:
+            return web.HTTPBadRequest(text="404: Not found")
+        except Exception as error:
+            print(type(error))
+            #traceback.print_exc(file=sys.stdout)
             return web.HTTPBadRequest()
 
     async def award_handler(self, request):
         try:
-            filepath = 'api/award/' + award_id + '/json'
             award_id = request.match_info['award_id']
             requested_file = request.match_info['requested_file']
+            filepath = f"api/award/{award_id}"
             if requested_file == 'json':
-                return web.fileresponse(filepath + 'award.json')
+                return web.FileResponse(f"api/award/{award_id}/award.json")
+            if requested_file == 'image':
+                return web.FileResponse(f"api/award/{award_id}/award.png")
         except:
             traceback.print_exc(file=sys.stdout)
             return web.HTTPBadRequest()
+
+    async def bake_award(self, award_id):
+        #r = await requests.get(bake_api_request, stream=True) #stream=True so that requests doesn't download the whole image into memory first.
+        async with aiohttp.ClientSession() as session:
+            url = f"{self.bakery_path}{self.api_path}/award/{award_id}/json"
+            print(f"getting {url}...")
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    print(f"writing {award_id}/award.png")
+                    f = await aiofiles.open(f"api/award/{award_id}/award.png", mode='wb')
+                    await f.write(await resp.read())
+                    await f.close()
+                else:
+                    print(f"error: {await resp.read()}")
+                    sys.exit()
+                print(f"written!")
+
 
     async def newaward_handler(self, request):
         json_recv = await request.json()
         try:
             print(json.dumps(json_recv, indent=True))
+            print(self.badges)
+            badge_id = None
             for badge_id2 in self.badges:
-                if self.badges[badge_id2] == json_recv['name']:
+                if self.badges[badge_id2]['name'] == json_recv['name']:
                     badge_id = badge_id2
                     break
             if badge_id is None:
                 raise ValueError
-            badge_url = 'http://vituin-chat.iaas.ull.es/api/badge/' + badge_id + '/json'
+            badge_url = f"{self.api_path}/badge/{badge_id}/json"
             params = dict()
             params['id'] = uuid.uuid4().hex
             params['email'] = json_recv['email']
-            params['timestamp'] = str(datetime.fromtimestamp(time.time()))
+            params['timestamp'] = str(datetime.utcnow().isoformat())
             params['badge_url'] = badge_url
             award = Award(**params)
 
-            print(json.dumps(award.json, indent=True))
+            award_path = f"api/award/{award.id}/award.json"
+            os.makedirs(f"api/award/{award.id}/")
+            with open(award_path, 'w') as f:
+                json.dump(award.json, f)
 
-            return web.Response(text="200: OK")
+            self.awards[award.id] = {
+                    'name': json_recv['name'] + " to " + json_recv['email'],
+                    'url': f"{self.api_path}/award/{award.id}/json"
+                    }
+            with open("api/awards.json", 'w') as f:
+                json.dump(self.awards, f)
+
+            await self.bake_award(award.id)
+
+            return web.Response(text=award.id)
         except:
             traceback.print_exc(file=sys.stdout)
             return web.HTTPBadRequest()
@@ -149,7 +199,7 @@ class Api:
         app.router.add_get('/api/awards', self.awards_handler)
         app.router.add_get('/api/badge/{badge_id}/{requested_file}', self.badge_handler)
         app.router.add_get('/api/award/{award_id}/{requested_file}', self.award_handler)
-        app.router.add_get('/api/issuer.json', self.issuer_handler)
+        app.router.add_get('/api/issuer', self.issuer_handler)
 
         web.run_app(app, port=5000)
 

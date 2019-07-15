@@ -19,6 +19,29 @@ class TextBlock:
                 text_blocks.append(thing)
         return text_blocks
 
+    def award_text_block(self, user_id, badge_name, award_png_url):
+        return [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*Nueva medalla para {user_id}*\n¡Felicidades {user_id}! has recibido {badge_name}"
+                        }
+                    },
+                {
+                    "type": "image",
+                    "title": {
+                        "type": "plain_text",
+                        "text": f"{badge_name}",
+                        "emoji": True
+                        },
+                    "image_url": f"{award_png_url}",
+                    "alt_text": f"{badge_name}"
+                    }
+                ]
+
+
+
     def _section_with_image(self, text, image_url):
         return [{
                 "type": "divider"

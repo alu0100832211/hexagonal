@@ -15,12 +15,15 @@ from onboarding_tutorial import OnboardingTutorial, CreateMessage
 from application import Application
 from textblock import TextBlock
 from award import Award
+from config import Config
 
 
 
 class Bot:
     def __init__(self):
         self.slack_token = os.environ["SLACK_BOT_TOKEN"]
+        self.config = Config()
+        self.api_path = self.config.api_path
         self.sc = slack.WebClient(token=self.slack_token)
         self.id = self.get_bot_id()
         self.textblock = TextBlock()
@@ -54,14 +57,20 @@ class Bot:
     async def award_badge(self, user_id, badge_name, wc, cid):
         if user_id not in self.user_email:
             self.user_email[user_id] = await self.get_email(user_id, wc, cid)
-
         newaward_json = dict()
         newaward_json['email'] = self.user_email[user_id]
         newaward_json['name'] = badge_name
-
+        # Al hacer un award se va a quedar bloqueado también el servidor si se ejecuta en el  mismo proceso
         r = requests.post('http://vituin-chat.iaas.ull.es/api/newaward', json=newaward_json)
 
-        print(r.text)
+        params = dict()
+        params['user_id'] = user_id
+        params['badge_name'] = badge_name
+        params['award_png_url'] = f"http://vituin-chat.iaas.ull.es/api/award/{r.text}/image"
+        award_block = self.textblock.award_text_block(**params)
+        #for block in award_block:
+        #    print(json.dumps(block, indent=True))
+        wc.chat_postMessage(channel=cid, blocks = award_block)
 
     async def get_email(self, user_id, wc, cid):
         response = await self.sc.api_call("users.list")
@@ -77,21 +86,25 @@ async def message(**payload):
     that contains "start".
 
     """
+
     data = payload["data"]
+    args = data['text'].split()
+
+    if (args.pop(0) != bot.id):
+        return
+
     web_client = payload["web_client"]
     channel_id = data.get("channel")
 
-    args = data['text'].split()
     print(args)
 
-    if args.pop(0) == bot.id:
-        if ' '.join(args) == "list badges":
-            bot.list_badges(web_client, channel_id)
-        if args[0] == 'award':
-            args.pop(0)
-            user_id = args.pop(0)
-            badge_name = ' '.join(args)
-            await bot.award_badge(user_id, badge_name, web_client, channel_id)
+    if ' '.join(args) == "list badges":
+        bot.list_badges(web_client, channel_id)
+    if args[0] == 'award':
+        args.pop(0)
+        user_id = args.pop(0)
+        badge_name = ' '.join(args)
+        await bot.award_badge(user_id, badge_name, web_client, channel_id)
 
 def start(loop):
     logger = logging.getLogger()
